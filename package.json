@@ -1,0 +1,24 @@
+{
+  "name": "es6-privatize",
+  "version": "1.0.0",
+  "description": "Privatizes es6 and es7 classes with minimal overhead",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mlaanderson/es6-privatize.git"
+  },
+  "keywords": [
+    "ES6",
+    "\"private",
+    "class\""
+  ],
+  "author": "Michael Anderson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mlaanderson/es6-privatize/issues"
+  },
+  "homepage": "https://github.com/mlaanderson/es6-privatize#readme"
+}

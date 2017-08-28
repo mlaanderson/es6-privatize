@@ -23,7 +23,7 @@ class Person {
         });
     }
 
-    /* Private variables and methods start with '__' */
+    /* Private variables and methods start with '__' (defined by options.privatePrefix) */
 
     __birthday() {
         this.__age ++;
