@@ -10,6 +10,7 @@ The options object has three properties:
 # Usage
 ~~~~
 var Privatize = require('es6-privatize');
+var util = require('util');
 
 class Person {
     constructor(name, age) {

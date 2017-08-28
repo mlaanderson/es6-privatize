@@ -1,4 +1,5 @@
 const assert = require('assert');
+const util = require('util');
 
 var OptionsMap = new WeakMap();
 
