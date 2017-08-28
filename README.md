@@ -48,35 +48,6 @@ class Person {
     }
 
     /**
-     * Used by Privatize to intercept inspection and present public data
-     * to the user.
-     * 
-     * @see {@link https://nodejs.org/dist/latest-v8.x/docs/api/util.html#util_custom_inspection_functions_on_objects} for further information.
-     * @param {number} depth 
-     * @param {any} options 
-     * @returns 
-     * @memberof Person
-     */
-    inspect(depth, options) {
-        if (depth < 0) {
-            return options.stylize('[Person]', 'special');
-        }
-
-        var objData = {
-            Name: this.Name,
-            Age: this.Age
-        };
-
-        const newOptions = Object.assign({}, options, {
-            depth: options.depth === null ? null : options.depth - 1
-        });
-
-        const padding = ' '.repeat(7);
-        const inner = util.inspect(objData, newOptions).replace(/\n/g, '\n' + padding);
-        return options.stylize('Person', 'special') + ' '+ inner;
-    }
-
-    /**
      * Used by Privatize to intercept JSON.stringify and return JSON
      * data to represent the publically available data.
      * 

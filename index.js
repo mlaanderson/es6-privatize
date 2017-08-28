@@ -11,6 +11,36 @@ var handler = {
             }
             return undefined;
         }
+
+        if (name === 'inspect') {
+            if ('inspect' in target && typeof target.inspect === 'function') {
+                return target.inspect();
+            }
+
+            return function(depth, options) {
+                if (depth < 0) {
+                    return options.stylize('[' + target.constructor.name + ']', 'special');
+                }
+
+                let objData;
+
+                if ('toJSON' in target && typeof target.toJSON === 'function') {
+                    objData = target.toJSON();
+                } else {
+                    objData = {};
+                }
+
+                const newOptions = Object.assign({}, options, {
+                    depth: options.depth === null ? null : options.depth - 1
+                });
+
+                const padding = ' '.repeat(1 + target.constructor.name.length);
+                const inner = util.inspect(objData, newOptions).replace(/\n/g, '\n' + padding);
+
+                return options.stylize(this.constructor.name, 'special') + ' '+ inner;
+            }
+        }
+
         return target[name];
     },
 
@@ -66,9 +96,6 @@ function Privatize(target, options) {
     
     if (options.warn && (options.privatePrefix + 'privatize__keyMap' in target === false)) {
         console.warn('Private data might be able to be exposed');
-    }
-    if (options.warn && ('inspect' in target === false || typeof target.inspect !== 'function')) {
-        console.warn('"inspect" method needed to present getters as properties (https://nodejs.org/dist/latest-v8.x/docs/api/util.html#util_custom_inspection_functions_on_objects)');
     }
     if (options.warn && ('toJSON' in target === false)) {
         console.warn('"toJSON" method needed to allow serialization of getters as properties');
