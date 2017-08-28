@@ -13,8 +13,8 @@ var handler = {
         }
 
         if (name === 'inspect') {
-            if ('inspect' in target && typeof target.inspect === 'function') {
-                return target.inspect();
+            if ('inspect' in target) {
+                return target.inspect;
             }
 
             return function(depth, options) {
