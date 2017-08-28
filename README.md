@@ -120,10 +120,10 @@ console.log(michael.__age);        // undefined
 console.log('__age' in michael);   // false
 console.log(Object.keys(michael)); // [ Age, Name ]
 
-michael.__age = '45';              // throws access exception
-michael.Age = '45';                // throws TypeException
+michael.__age = '45';              // fails silently (same as undefined = '45')
+michael.Age = '45';                // throws TypeError("Invalid Type")
 michael.Age = 45;                  // success
-michael.__birthday();              // throws "undefined is not a function"
+michael.__birthday();              // throws TypeError("michael.__birthday is not a function")
 ~~~~
 
 # Notes
