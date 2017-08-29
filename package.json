@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/mlaanderson/es6-privatize/issues"
   },
-  "homepage": "https://github.com/mlaanderson/es6-privatize#readme"
+  "homepage": "https://github.com/mlaanderson/es6-privatize#readme",
+  "dependencies": {
+    "debug": "^3.0.1"
+  }
 }
