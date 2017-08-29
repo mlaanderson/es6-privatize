@@ -3,9 +3,20 @@ Privatizes es6 and es7 classes with minimal overhead
 
 # Options
 The options object has three properties:
-* warn - boolean value which indicates if the Privatize function warns about possible data leakage
-* privatePrefix - string value which precedes private members
-* errorOnPrivate - boolean value which indicates if attempts to access private members will throw an exception. If false, they return undefined.
+* warn - boolean value which indicates if the Privatize function warns about possible data leakage. Default: true
+* privatePrefix - string value which precedes private members. Default: __
+* errorOnPrivate - boolean value which indicates if attempts to access private members will throw an exception. If false, they return undefined. Default: false
+* apply - boolean value which indicates if the Privatize function can implement the ProxyHandler.apply function. Default: true
+* construct -  boolean value which indicates if the Privatize function can implement the ProxyHandler.construct function. Default: true
+* defineProperty -  boolean value which indicates if the Privatize function can implement the ProxyHandler.defineProperty function. Default: false
+* deleteProperty -  boolean value which indicates if the Privatize function can implement the ProxyHandler.deleteProperty function. Default: false
+* getOwnPropertyDescriptor -  boolean value which indicates if the Privatize function can implement the ProxyHandler.getOwnPropertyDescriptor function. Default: true
+* getPrototypeOf -  boolean value which indicates if the Privatize function can implement the ProxyHandler.getPrototypeOf function. Default: true
+* has -  boolean value which indicates if the Privatize function can implement the ProxyHandler.has function. Default: true
+* isExtensible -  boolean value which indicates if the Privatize function can implement the ProxyHandler.isExtensible function. Default: false
+* ownKeys -  boolean value which indicates if the Privatize function can implement the ProxyHandler.ownKeys function. Default: true
+* preventExtensions -  boolean value which indicates if the Privatize function can implement the ProxyHandler.preventExtensions function. Default: true
+* setPrototypeOf -  boolean value which indicates if the Privatize function can implement the ProxyHandler.setPrototypeOf function. Default: false
 
 # Usage
 ~~~~

@@ -1,11 +1,53 @@
+const debug = require('debug')('privatize');
 const assert = require('assert');
 const util = require('util');
 
 var OptionsMap = new WeakMap();
 
 var handler = {
+    apply: function(target, thisArg, argumentsList) {
+        if (OptionsMap.get(target).apply === false) return undefined;
+        debug('apply: %o, %o, %o', target, thisArg, argumentsList);
+
+        return target.apply(thisArg, argumentsList);
+    },
+
+    construct: function(target, argumentsList, newTarget) {
+        if (OptionsMap.get(target).construct === false) return undefined;
+        debug('construct: %o, %o, %o', target, argumentsList, newTarget);
+
+        return new target.constructor(argumentsList);
+    },
+
+    defineProperty: function(target, property, descriptor) {
+        if (OptionsMap.get(target).defineProperty === false) return false;
+        debug('defineProperty: %o, %o, %o', target, property, descriptor);
+
+        try {
+            Object.defineProperty(target, property, descriptor);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    },
+
+    deleteProperty: function(target, property) {
+        if (OptionsMap.get(target).deleteProperty === false) false;
+        debug('deleteProperty: %o, %o', target, property);
+
+        try {
+            Object.deleteProperty(target, property);
+            return true;
+        } catch (err) {
+            return false;
+        }
+    },
+
     get: function(target, name) { 
+        debug('get: %o, %o', target, name);
+
         if (typeof name === 'string' && name.startsWith(OptionsMap.get(target).privatePrefix)) {
+            debug('get: attempt to access private data');
             if (OptionsMap.get(target).errorOnPrivate === true) {
                 throw new Error('Private member access not allowed');
             }
@@ -17,6 +59,7 @@ var handler = {
                 return target.inspect;
             }
 
+            debug('get: internal inspect method');
             return function(depth, options) {
                 if (depth < 0) {
                     return options.stylize('[' + target.constructor.name + ']', 'special');
@@ -44,8 +87,94 @@ var handler = {
         return target[name];
     },
 
-    set: function(target, name, value) {
+    getOwnPropertyDescriptor: function(target, name) {
+        if (OptionsMap.get(target).getOwnPropertyDescriptor === false) return undefined;
+        debug('getOwnPropertyDescriptor: %o, %o', target, name);
+
         if (typeof name === 'string' && name.startsWith(OptionsMap.get(target).privatePrefix)) {
+            debug('get: attempt to access private data');
+            if (OptionsMap.get(target).errorOnPrivate === true) {
+                throw new Error('Private member access not allowed');
+            }
+            return undefined;
+        }
+
+        if (OptionsMap.get(target).privatePrefix + 'privatize__keyMap' in target === false) {
+            debug('getOwnPropertyDescriptor: no privatize_keyMap available');
+            if (OptionsMap.get(target).warn === true) {
+                console.warn('Private data may be visible');
+            }
+            return Object.getOwnPropertyDescriptor(target, name);
+        }
+
+        function getMappedDescriptor() {
+            if (name in target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']()) {
+                let mappedName = target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']()[name];
+                let descriptor = Object.getOwnPropertyDescriptor(target, mappedName);
+                return descriptor;
+            }
+            return undefined;
+        }
+
+        function getDirectDescriptor() {
+            let descriptor = Object.getOwnPropertyDescriptor(target, name);
+            return descriptor;
+        }
+        
+        if (name in target) {
+            let descriptor = getDirectDescriptor() || getMappedDescriptor();
+            return descriptor;
+        }
+        
+        return undefined;
+    },
+
+    getPrototypeOf: function(target) {
+        if (OptionsMap.get(target).getPrototypeOf === false) return null;
+        debug('getPrototypeOf: %o', target);
+
+        return Object.getPrototypeOf(target);
+    },
+
+    has: function(target, name) {
+        if (OptionsMap.get(target).has === false) return false;
+        debug('has: %o, %o', target, name);
+
+        if (typeof name === 'string' && name.startsWith(OptionsMap.get(target).privatePrefix)) {
+            debug('has: attempt to access private member');
+            return false;
+        }
+        return name in target;
+    },
+
+    isExtensible: function(target) {
+        debug('isExtensible: %o', target);
+        return OptionsMap.get(target).isExtensible;
+    },
+
+    ownKeys: function(target) {
+        if (OptionsMap.get(target).ownKeys === false) return [];
+        debug('ownKeys: %o', target);
+
+        if (OptionsMap.get(target).privatePrefix + 'privatize__keyMap' in target === false) {
+            if (OptionsMap.get(target).warn === true) {
+                console.warn('Private keys may be visible');
+            }
+            debug('ownKeys: no privatize_keyMap available');
+            return Object.getOwnPropertyNames(target);
+        }
+        return Object.getOwnPropertyNames(target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']());
+    },
+
+    preventExtensions: function(target) {
+        debug('preventExtensions: %o', target);
+        return OptionsMap.get(target).preventExtensions;
+    },
+
+    set: function(target, name, value) {
+        debug('set: %o, %o, %o', target, name, value);
+        if (typeof name === 'string' && name.startsWith(OptionsMap.get(target).privatePrefix)) {
+            debug('set: attempt to access private member');
             if (OptionsMap.get(target).errorOnPrivate === true) {
                 throw new Error('Private member access not allowed');
             }
@@ -54,52 +183,46 @@ var handler = {
         return target[name] = value;
     },
 
-    has: function(target, name) {
-        if (typeof name === 'string' && name.startsWith(OptionsMap.get(target).privatePrefix)) {
-            return false;
-        }
-        return name in target;
-    },
+    setPrototypeOf: function(target, proto) {
+        if (OptionsMap.get(target).setPrototypeOf === true) return false;
+        debug('setPrototypeOf: %o, %o', target, prototype);
 
-    ownKeys: function(target) {
-        if (OptionsMap.get(target).privatePrefix + 'privatize__keyMap' in target === false) {
-            if (OptionsMap.get(target).warn === true) {
-                console.warn('Private keys may be visible');
-            }
-            return Object.getOwnPropertyNames(target);
-        }
-        return Object.getOwnPropertyNames(target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']());
-    },
-
-    getOwnPropertyDescriptor: function(target, name) {
-        if (OptionsMap.get(target).privatePrefix + 'privatize__keyMap' in target === false) {
-            if (OptionsMap.get(target).warn === true) {
-                console.warn('Private data may be visible');
-            }
-            return Object.getOwnPropertyDescriptor(target, name);
-        }
-        if (name in target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']()) {
-            return Object.getOwnPropertyDescriptor(target, target[OptionsMap.get(target).privatePrefix + 'privatize__keyMap']()[name]);
-        }
-        return undefined;
+        return Object.setPrototypeOf(target, proto) !== null;
     }
 }
 
 function Privatize(target, options) {
     options = Object.assign({ 
+        /** Behavior */
         warn: true, 
         errorOnPrivate: false,
-        privatePrefix: '__'
+        privatePrefix: '__',
+        /** Configuration */
+        apply: true,
+        construct: true,
+        defineProperty: false,
+        deleteProperty: false,
+        getOwnPropertyDescriptor: true,
+        getPrototypeOf: true,
+        has: true,
+        isExtensible: false,
+        ownKeys: true,
+        preventExtensions: true,
+        setPrototypeOf: false,
     }, options);
 
     OptionsMap.set(target, options);
     
-    if (options.warn && (options.privatePrefix + 'privatize__keyMap' in target === false)) {
-        console.warn('Private data might be able to be exposed');
+    if (options.privatePrefix + 'privatize__keyMap' in target === false) {
+        if (options.warn) console.warn('Private data might be able to be exposed');
+        debug('Private data might be able to be exposed');
     }
-    if (options.warn && ('toJSON' in target === false)) {
-        console.warn('"toJSON" method needed to allow serialization of getters as properties');
+    if ('toJSON' in target === false) {
+        if (options.warn) console.warn('"toJSON" method needed to allow serialization of getters as properties');
+        debug('"toJSON" method needed to allow serialization of getters as properties');
     }
+
+    debug('Privatizing %o with options %o', target, options);
 
     return new Proxy(target, handler);
 }
@@ -127,25 +250,6 @@ if (require.main === module) {
                 'Age': '$$age',
                 'Name': '$$name'
             };
-        }
-
-        inspect(depth, options) {
-            if (depth < 0) {
-                return options.stylize('[Person]', 'special');
-            }
-    
-            var objData = {
-                Name: this.Name,
-                Age: this.Age
-            };
-    
-            const newOptions = Object.assign({}, options, {
-                depth: options.depth === null ? null : options.depth - 1
-            });
-    
-            const padding = ' '.repeat(7);
-            const inner = util.inspect(objData, newOptions).replace(/\n/g, '\n' + padding);
-            return options.stylize('Person', 'special') + ' '+ inner;
         }
 
         toJSON() {
